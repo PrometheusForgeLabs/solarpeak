@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://re.jrc.ec.europa.eu/api/:path*"
+    }
+  ]
+}
