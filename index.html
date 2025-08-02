@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Peak Sun Hours Calculator</title>
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css](https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css)">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4a90e2">
+    <link rel="apple-touch-icon" href="images/icon-192x192.png">
+</head>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto p-4">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-2xl font-bold mb-4">Solar Peak Sun Hours Calculator</h1>
+            <div class="mb-4">
+                <label for="latitude" class="block text-gray-700">Latitude</label>
+                <input type="text" id="latitude" class="w-full p-2 border rounded">
+            </div>
+            <div class="mb-4">
+                <label for="longitude" class="block text-gray-700">Longitude</label>
+                <input type="text" id="longitude" class="w-full p-2 border rounded">
+            </div>
+            <div class="mb-4">
+                <label for="tilt" class="block text-gray-700">Tilt</label>
+                <input type="text" id="tilt" class="w-full p-2 border rounded">
+            </div>
+            <div class="mb-4">
+                <label for="azimuth" class="block text-gray-700">Azimuth</label>
+                <input type="text" id="azimuth" class="w-full p-2 border rounded">
+            </div>
+            <button id="calculate" class="w-full bg-blue-500 text-white p-2 rounded">Calculate</button>
+            <div id="result" class="mt-4"></div>
+        </div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        document.getElementById('calculate').addEventListener('click', () => {
+            const lat = document.getElementById('latitude').value;
+            const lon = document.getElementById('longitude').value;
+            const tilt = document.getElementById('tilt').value;
+            const azimuth = document.getElementById('azimuth').value;
+
+            const apiUrl = `https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?lat=${lat}&lon=${lon}&peakpower=1&loss=14&angle=${tilt}&aspect=${azimuth}&outputformat=json`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const monthlyData = data.outputs.monthly.fixed;
+                    let table = '<table class="w-full mt-4 border-collapse border border-gray-400">';
+                    table += '<thead><tr><th class="p-2 border border-gray-300">Month</th><th class="p-2 border border-gray-300">Peak Sun Hours</th></tr></thead>';
+                    table += '<tbody>';
+                    monthlyData.forEach(month => {
+                        table += `<tr><td class="p-2 border border-gray-300">${month.month}</td><td class="p-2 border border-gray-300">${month.E_d.toFixed(2)}</td></tr>`;
+                    });
+                    table += '</tbody></table>';
+                    document.getElementById('result').innerHTML = table;
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    document.getElementById('result').innerHTML = '<p class="text-red-500">Error fetching data. Please try again.</p>';
+                });
+        });
+    </script>
+</body>
+</html>
