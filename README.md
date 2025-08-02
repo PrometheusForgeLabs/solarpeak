@@ -2,6 +2,10 @@
 
 An installable Progressive Web App (PWA) designed to provide accurate solar irradiation data for any location, helping you design more efficient off-grid solar power systems.
 
+### Screenshot
+
+![Solar Calculator Screenshot](solar-calculator-screenshot.png)
+
 ### Description
 
 This application simplifies the complex task of determining solar energy potential by providing monthly average peak sun hours (kWh/m²/day) for any given latitude and longitude. By allowing users to specify the tilt and azimuth of their solar panels, it delivers precise calculations essential for sizing solar arrays and battery banks.
