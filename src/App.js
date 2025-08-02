@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Sun, MapPin, Loader2, AlertCircle, BarChart } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Sun, MapPin, Loader2, AlertCircle, BarChart, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // --- UI Components (Styled with Tailwind CSS) ---
 // These components mimic the style of shadcn/ui for a clean look.
@@ -62,8 +64,10 @@ function App() {
     const [tilt, setTilt] = useState('10');
     const [azimuth, setAzimuth] = useState('0');
     const [results, setResults] = useState(null);
+    const [totals, setTotals] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const resultsRef = useRef();
 
     const handleGetLocation = () => {
         if (navigator.geolocation) {
@@ -93,6 +97,7 @@ function App() {
         setIsLoading(true);
         setError('');
         setResults(null);
+        setTotals(null);
         
         // Use a relative URL. The Create React App proxy will forward this to the correct server.
         const apiUrl = `/api/v5_2/PVcalc?lat=${latitude}&lon=${longitude}&peakpower=1&loss=14&angle=${tilt || 0}&aspect=${azimuth || 0}&outputformat=json`;
@@ -105,12 +110,48 @@ function App() {
             }
             const data = await response.json();
             setResults(data.outputs.monthly.fixed);
+            setTotals(data.outputs.totals.fixed);
         } catch (err) {
             setError(`Failed to fetch data: ${err.message}. Please check your inputs and try again.`);
             console.error(err);
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleDownloadPdf = () => {
+        if (!results || !totals) {
+            return;
+        }
+
+        const doc = new jsPDF();
+
+        // Add monthly data
+        doc.setFontSize(16);
+        doc.text('Monthly Average Peak Sun Hours (kWh/m²/day)', 14, 22);
+        autoTable(doc, {
+            startY: 30,
+            head: [['Month', 'Energy (E_d)', 'Irradiation (H(i)_d)']],
+            body: results.map((monthData, index) => [
+                monthNames[index],
+                monthData.E_d.toFixed(2),
+                monthData['H(i)_d'].toFixed(2),
+            ]),
+        });
+
+        // Add yearly data
+        let finalY = doc.lastAutoTable.finalY || 30;
+        doc.setFontSize(16);
+        doc.text('Yearly Summary', 14, finalY + 15);
+        autoTable(doc, {
+            startY: finalY + 23,
+            head: [['Description', 'Energy (E_y)', 'Irradiation (H(i)_y)']],
+            body: [
+                ['Total', totals.E_y.toFixed(2), totals['H(i)_y'].toFixed(2)],
+            ],
+        });
+
+        doc.save('solar-report.pdf');
     };
 
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -159,29 +200,64 @@ function App() {
 
                     {error && <Alert variant="destructive">{error}</Alert>}
 
-                    {results && (
-                        <div className="mt-6">
-                            <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Monthly Average Peak Sun Hours (kWh/m²/day)</h2>
-                            <div className="rounded-lg border dark:border-gray-700 overflow-hidden">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Month</TableHead>
-                                            <TableHead>Energy (E_d)</TableHead>
-                                            <TableHead>Irradiation (H(i)_d)</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {results.map((monthData, index) => (
-                                            <TableRow key={monthData.month}>
-                                                <TableCell>{monthNames[index]}</TableCell>
-                                                <TableCell>{monthData.E_d.toFixed(2)}</TableCell>
-                                                <TableCell>{monthData['H(i)_d'].toFixed(2)}</TableCell>
+                    <div ref={resultsRef}>
+                        {results && (
+                            <div className="mt-6">
+                                <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Monthly Average Peak Sun Hours (kWh/m²/day)</h2>
+                                <div className="rounded-lg border dark:border-gray-700 overflow-hidden">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Month</TableHead>
+                                                <TableHead>Energy (E_d)</TableHead>
+                                                <TableHead>Irradiation (H(i)_d)</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {results.map((monthData, index) => (
+                                                <TableRow key={monthData.month}>
+                                                    <TableCell>{monthNames[index]}</TableCell>
+                                                    <TableCell>{monthData.E_d.toFixed(2)}</TableCell>
+                                                    <TableCell>{monthData['H(i)_d'].toFixed(2)}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             </div>
+                        )}
+
+                        {totals && (
+                            <div className="mt-6">
+                                <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Yearly Summary</h2>
+                                <div className="rounded-lg border dark:border-gray-700 overflow-hidden">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Description</TableHead>
+                                                <TableHead>Energy (E_y)</TableHead>
+                                                <TableHead>Irradiation (H(i)_y)</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            <TableRow>
+                                                <TableCell>Total</TableCell>
+                                                <TableCell>{totals.E_y.toFixed(2)}</TableCell>
+                                                <TableCell>{totals['H(i)_y'].toFixed(2)}</TableCell>
+                                            </TableRow>
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {results && (
+                        <div className="mt-6 flex justify-end">
+                            <Button onClick={handleDownloadPdf} className="bg-green-600 hover:bg-green-700">
+                                <Download className="mr-2 h-4 w-4" />
+                                Download PDF
+                            </Button>
                         </div>
                     )}
                 </CardContent>
