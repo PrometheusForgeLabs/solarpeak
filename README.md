@@ -1,6 +1,18 @@
-# Getting Started with Create React App
+# ☀️ Solar Peak Sun Hours Calculator
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+An installable Progressive Web App (PWA) designed to provide accurate solar irradiation data for any location, helping you design more efficient off-grid solar power systems.
+
+### Description
+
+This application simplifies the complex task of determining solar energy potential by providing monthly average peak sun hours (kWh/m²/day) for any given latitude and longitude. By allowing users to specify the tilt and azimuth of their solar panels, it delivers precise calculations essential for sizing solar arrays and battery banks.
+
+### Key Features
+
+- **Global Coverage:** Get solar data for any location on Earth.
+- **Customizable Calculations:** Input your specific panel tilt and azimuth for tailored results.
+- **Use Your Location:** Instantly fetch data for your current position with a single tap.
+- **Installable PWA:** Add SolarCalc to your home screen for a fast, native app-like experience.
+- **Offline Ready:** The app is cached to work even when you don't have an internet connection.
 
 ## Available Scripts
 
