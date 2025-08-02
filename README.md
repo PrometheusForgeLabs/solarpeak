@@ -15,6 +15,7 @@ This application simplifies the complex task of determining solar energy potenti
 - **Global Coverage:** Get solar data for any location on Earth.
 - **Customizable Calculations:** Input your specific panel tilt and azimuth for tailored results.
 - **Use Your Location:** Instantly fetch data for your current position with a single tap.
+- **Download PDF:** Download a PDF report of the solar data for offline use.
 - **Installable PWA:** Add SolarCalc to your home screen for a fast, native app-like experience.
 - **Offline Ready:** The app is cached to work even when you don't have an internet connection.
 
